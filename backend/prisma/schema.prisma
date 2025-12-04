@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  TERMINATED
+  ONBOARDING
+}
+
+enum LeaveStatus {
+  APPROVED
+  PENDING
+  DENIED
+  CANCELLED
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  MATERNITY
+  COMPASSIONATE
+  OTHER
+}
+
+enum UploadStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Department {
+  id                   String       @id @default(uuid())
+  name                 String
+  headId               String?      @map("head_id")
+  head                 Employee?    @relation("DepartmentHead", fields: [headId], references: [id])
+  parentDepartmentId   String?      @map("parent_department_id")
+  parentDepartment     Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id])
+  subDepartments       Department[] @relation("DepartmentHierarchy")
+  employees            Employee[]
+  vacancies            Vacancy[]
+  engagementMetrics    EngagementMetric[]
+  costPerHireRecords   CostPerHire[]
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  sourceFile           String?
+  uploadId             String?      @map("upload_id")
+  upload               UploadJob?   @relation(fields: [uploadId], references: [id])
+}
+
+model Employee {
+  id             String          @id @default(uuid())
+  employeeNumber String          @unique @map("employee_number")
+  firstName      String          @map("first_name")
+  lastName       String          @map("last_name")
+  email          String?
+  jobTitle       String?         @map("job_title")
+  grade          String?
+  hireDate       DateTime?       @map("hire_date")
+  exitDate       DateTime?       @map("exit_date")
+  status         EmployeeStatus  @default(ACTIVE)
+  gender         String?
+  birthdate      DateTime?
+  location       String?
+  managerId      String?         @map("manager_id")
+  manager        Employee?       @relation("EmployeeManager", fields: [managerId], references: [id])
+  directReports  Employee[]      @relation("EmployeeManager")
+  departmentId   String?         @map("department_id")
+  department     Department?     @relation(fields: [departmentId], references: [id])
+  leaveRecords   LeaveRecord[]
+  training       TrainingRecord[]
+  sickbay        SickbayRecord[]
+  onboarding     OnboardingRecord[]
+  exits          ExitRecord[]
+  costPerHire    CostPerHire[]
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  sourceFile     String?
+  uploadId       String?     @map("upload_id")
+  upload         UploadJob?  @relation(fields: [uploadId], references: [id])
+}
+
+model LeaveRecord {
+  id          String      @id @default(uuid())
+  employeeId  String      @map("employee_id")
+  employee    Employee    @relation(fields: [employeeId], references: [id])
+  leaveType   LeaveType   @map("leave_type")
+  startDate   DateTime    @map("start_date")
+  endDate     DateTime    @map("end_date")
+  workingDays Decimal     @map("working_days")
+  status      LeaveStatus
+  reason      String?
+  sourceRef   String?     @map("source_reference")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  sourceFile  String?
+  uploadId    String?    @map("upload_id")
+  upload      UploadJob? @relation(fields: [uploadId], references: [id])
+
+  @@index([employeeId, startDate, endDate])
+}
+
+model TrainingRecord {
+  id         String     @id @default(uuid())
+  employeeId String     @map("employee_id")
+  employee   Employee   @relation(fields: [employeeId], references: [id])
+  courseName String     @map("course_name")
+  startDate  DateTime?  @map("start_date")
+  endDate    DateTime?  @map("end_date")
+  status     String?
+  cost       Decimal?   @default(0)
+  provider   String?
+  notes      String?
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  sourceFile String?
+  uploadId   String?    @map("upload_id")
+  upload     UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model SickbayRecord {
+  id         String    @id @default(uuid())
+  employeeId String    @map("employee_id")
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  date       DateTime
+  hoursOff   Decimal?  @map("hours_off")
+  reason     String?
+  approvedBy String?   @map("approved_by")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  sourceFile String?
+  uploadId   String?    @map("upload_id")
+  upload     UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model OnboardingRecord {
+  id         String    @id @default(uuid())
+  employeeId String    @map("employee_id")
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  onboardDate DateTime @map("onboard_date")
+  activity   String?
+  status     String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  sourceFile String?
+  uploadId   String?    @map("upload_id")
+  upload     UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model ExitRecord {
+  id              String    @id @default(uuid())
+  employeeId      String    @map("employee_id")
+  employee        Employee  @relation(fields: [employeeId], references: [id])
+  exitDate        DateTime  @map("exit_date")
+  reason          String?
+  noticePeriod    Int?      @map("notice_period")
+  lastWorkingDate DateTime? @map("last_working_date")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  sourceFile      String?
+  uploadId        String?    @map("upload_id")
+  upload          UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model Vacancy {
+  id           String     @id @default(uuid())
+  departmentId String?    @map("department_id")
+  department   Department? @relation(fields: [departmentId], references: [id])
+  vacancyCode  String?    @map("vacancy_id")
+  cadre        String?
+  status       String?
+  postedDate   DateTime?  @map("posted_date")
+  filledDate   DateTime?  @map("filled_date")
+  costPerHire  Decimal?   @map("cost_per_hire")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  sourceFile   String?
+  uploadId     String?    @map("upload_id")
+  upload       UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model StatutoryCompliance {
+  id        String   @id @default(uuid())
+  item      String
+  dueDate   DateTime? @map("due_date")
+  status    String?
+  notes     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  sourceFile String?
+  uploadId   String?    @map("upload_id")
+  upload     UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model EngagementMetric {
+  id          String      @id @default(uuid())
+  period      String
+  metricName  String      @map("metric_name")
+  value       Decimal     @map("metric_value")
+  departmentId String?    @map("department_id")
+  department  Department? @relation(fields: [departmentId], references: [id])
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  sourceFile  String?
+  uploadId    String?    @map("upload_id")
+  upload      UploadJob? @relation(fields: [uploadId], references: [id])
+
+  @@index([period, metricName])
+}
+
+model CostPerHire {
+  id             String     @id @default(uuid())
+  departmentId   String?    @map("department_id")
+  department     Department? @relation(fields: [departmentId], references: [id])
+  employeeId     String?    @map("employee_id")
+  employee       Employee?  @relation(fields: [employeeId], references: [id])
+  hireDate       DateTime?  @map("hire_date")
+  recruitmentCost Decimal?  @map("recruitment_cost")
+  onboardCost    Decimal?   @map("onboard_cost")
+  totalCost      Decimal?   @map("total_cost")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  sourceFile     String?
+  uploadId       String?    @map("upload_id")
+  upload         UploadJob? @relation(fields: [uploadId], references: [id])
+}
+
+model UploadJob {
+  id             String         @id @default(uuid())
+  filename       String
+  uploader       String?
+  status         UploadStatus   @default(PENDING)
+  periodStart    DateTime?      @map("period_start")
+  periodEnd      DateTime?      @map("period_end")
+  metadata       Json?
+  rowCount       Int?           @map("row_count")
+  processedRows  Int?           @map("processed_rows")
+  failedRows     Int?           @map("failed_rows")
+  errorSummary   String?        @map("error_summary")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  completedAt    DateTime?      @map("completed_at")
+  employees      Employee[]
+  departments    Department[]
+  leaveRecords   LeaveRecord[]
+  training       TrainingRecord[]
+  sickbay        SickbayRecord[]
+  onboarding     OnboardingRecord[]
+  exits          ExitRecord[]
+  vacancies      Vacancy[]
+  statutory      StatutoryCompliance[]
+  engagement     EngagementMetric[]
+  costPerHire    CostPerHire[]
+  errors         UploadError[]
+}
+
+model UploadError {
+  id         String      @id @default(uuid())
+  uploadId   String      @map("upload_id")
+  upload     UploadJob   @relation(fields: [uploadId], references: [id])
+  sheet      String
+  row        Int
+  column     String
+  message    String
+  sample     Json?
+  createdAt  DateTime    @default(now()) @map("created_at")
+}
+

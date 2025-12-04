@@ -1,0 +1,300 @@
+openapi: 3.0.3
+info:
+  title: HR Analytics API
+  version: "0.1.0"
+servers:
+  - url: http://localhost:4000
+paths:
+  /api/uploads/excel:
+    post:
+      summary: Upload HR Excel (template or vendor report)
+      operationId: uploadExcel
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          $ref: "#/components/responses/UploadAccepted"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /api/uploads/{uploadId}/status:
+    get:
+      summary: Check upload processing status
+      parameters:
+        - name: uploadId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/UploadStatus"
+  /api/dashboards/kpis:
+    get:
+      summary: KPI summary for a reporting period
+      parameters:
+        - in: query
+          name: period
+          required: true
+          description: YYYY-MM period identifier
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/KPISummary"
+  /api/dashboards/department/{deptId}:
+    get:
+      summary: Department-level KPIs
+      parameters:
+        - name: deptId
+          in: path
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: period
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/DepartmentDetail"
+  /api/leave/summary:
+    get:
+      summary: Leave analytics payload
+      parameters:
+        - in: query
+          name: period
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/LeaveSummary"
+  /api/exports/report:
+    get:
+      summary: Generate Excel export for a reporting period
+      parameters:
+        - in: query
+          name: period
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [excel]
+            default: excel
+      responses:
+        "200":
+          description: Excel file stream
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+  /api/employees/{employeeNumber}:
+    get:
+      summary: Employee profile lookup
+      parameters:
+        - name: employeeNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Employee payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    UploadSummary:
+      type: object
+      properties:
+        uploadId:
+          type: string
+        success:
+          type: boolean
+        sheets:
+          type: array
+          items:
+            type: object
+            properties:
+              sheet:
+                type: string
+              processed_rows:
+                type: integer
+              failed_rows:
+                type: integer
+    Employee:
+      type: object
+      properties:
+        employee_number:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        department:
+          type: string
+        job_title:
+          type: string
+        status:
+          type: string
+        manager_employee_number:
+          type: string
+    LeaveSummary:
+      type: object
+      properties:
+        period:
+          type: string
+        total_working_days_lost:
+          type: number
+        by_type:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              days:
+                type: number
+                format: float
+        trend_series:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+              days:
+                type: number
+    KPISummary:
+      type: object
+      properties:
+        period:
+          type: string
+        headcount:
+          type: integer
+        new_hires:
+          type: integer
+        exits:
+          type: integer
+        turnover_rate:
+          type: number
+        sick_days_total:
+          type: number
+        avg_time_to_hire_days:
+          type: number
+        vacancy_count:
+          type: integer
+  responses:
+    UploadAccepted:
+      description: Upload queued for processing
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UploadSummary"
+    UploadStatus:
+      description: Upload processing status
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              uploadId:
+                type: string
+              status:
+                type: string
+              processed_rows:
+                type: integer
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sheet:
+                      type: string
+                    row:
+                      type: integer
+                    column:
+                      type: string
+                    message:
+                      type: string
+    KPISummary:
+      description: KPI payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/KPISummary"
+    DepartmentDetail:
+      description: Department KPI payload
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              department_id:
+                type: string
+              name:
+                type: string
+              headcount:
+                type: integer
+              male_pct:
+                type: number
+              female_pct:
+                type: number
+              avg_tenure_months:
+                type: number
+              leave_days:
+                type: number
+              engagement_score:
+                type: number
+    LeaveSummary:
+      description: Leave analytics payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/LeaveSummary"
+    ValidationError:
+      description: Validation failure
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success, errors]
+            properties:
+              success:
+                type: boolean
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sheet:
+                      type: string
+                    row:
+                      type: integer
+                    column:
+                      type: string
+                    message:
+                      type: string
+
