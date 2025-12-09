@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Users, TrendingUp, BriefcaseIcon, BookOpen, Pill, Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Users, TrendingUp, BriefcaseIcon, BookOpen, Pill, Sparkles } from "lucide-react"
 import KPICard from "../KPICard"
 import { getOverviewKPIs } from "@/lib/hr-api"
 
@@ -56,19 +56,19 @@ export default function Overview({ month }: OverviewProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <KPICard
-          title="Headcount"
-          value={data?.headcount || 0}
+          title="Total Staff"
+          value={data?.totalStaff || 0}
           icon={<Users size={32} />}
-          trend={data?.newHires ?? 0}
-          trendLabel="New hires"
+          trend={2.5}
+          trendLabel="vs last month"
           color="purple"
         />
         <KPICard
           title="Attrition Rate"
-          value={`${data?.turnoverRate || 0}%`}
-          icon={data?.turnoverRate > 0 ? <TrendingUp size={32} /> : <ArrowDownRight size={32} />}
-          trend={data?.exits ?? 0}
-          trendLabel="Exits"
+          value={`${data?.attritionRate || 0}%`}
+          icon={<TrendingUp size={32} />}
+          trend={-1.2}
+          trendLabel="improvement"
           color="cyan"
         />
         <KPICard
@@ -79,17 +79,19 @@ export default function Overview({ month }: OverviewProps) {
           color="yellow"
         />
         <KPICard
-          title="Avg Time to Hire"
-          value={`${data?.avgTimeToHire || 0}d`}
+          title="Training Completion"
+          value={`${data?.trainingSummary || 0}%`}
           icon={<BookOpen size={32} />}
-          trendLabel="cycle time"
+          trend={5.8}
+          trendLabel="vs target"
           color="pink"
         />
         <KPICard
           title="Sickbay Cases"
           value={data?.sickbayCases || 0}
           icon={<Pill size={32} />}
-          trendLabel="working days lost"
+          trend={-2.3}
+          trendLabel="decrease"
           color="green"
         />
       </div>

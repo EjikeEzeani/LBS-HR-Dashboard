@@ -5,9 +5,12 @@ import { Calendar, Zap, Settings } from "lucide-react"
 interface TopBarProps {
   selectedMonth: string
   onMonthChange: (month: string) => void
+  onExportExcel?: () => void
+  onExportPpt?: () => void
+  exportingLabel?: string
 }
 
-export default function TopBar({ selectedMonth, onMonthChange }: TopBarProps) {
+export default function TopBar({ selectedMonth, onMonthChange, onExportExcel, onExportPpt, exportingLabel }: TopBarProps) {
   return (
     /* Premium glassmorphic top bar with enhanced gradient and shadow */
     <div className="glass sticky top-0 z-40 px-8 py-5 flex items-center justify-between border-b border-white/20 shadow-lg">
@@ -34,6 +37,29 @@ export default function TopBar({ selectedMonth, onMonthChange }: TopBarProps) {
               className="bg-transparent text-slate-900 dark:text-white text-sm font-bold focus:outline-none cursor-pointer w-32"
             />
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            className="glass-dark px-4 py-2 rounded-lg border border-white/10 shadow-sm hover:shadow-md transition flex items-center gap-2 text-sm font-semibold disabled:opacity-60"
+            onClick={onExportExcel}
+            disabled={!onExportExcel}
+          >
+            <span role="img" aria-label="excel">
+              📊
+            </span>
+            {exportingLabel ? exportingLabel : "Export Excel"}
+          </button>
+          <button
+            className="glass-dark px-4 py-2 rounded-lg border border-white/10 shadow-sm hover:shadow-md transition flex items-center gap-2 text-sm font-semibold disabled:opacity-60"
+            onClick={onExportPpt}
+            disabled={!onExportPpt}
+          >
+            <span role="img" aria-label="ppt">
+              📑
+            </span>
+            Export PPT
+          </button>
         </div>
 
         <button className="p-2.5 rounded-lg hover:bg-white/20 dark:hover:bg-white/10 transition-colors">

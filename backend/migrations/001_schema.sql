@@ -177,8 +177,7 @@ CREATE TABLE IF NOT EXISTS engagement_metrics (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   source_file TEXT,
-  upload_id TEXT REFERENCES upload_jobs(id),
-  UNIQUE(period, metric_name, department_code)
+  upload_id TEXT REFERENCES upload_jobs(id)
 );
 CREATE INDEX IF NOT EXISTS idx_engagement_period_metric ON engagement_metrics(period,metric_name);
 

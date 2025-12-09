@@ -1,27 +1,28 @@
 import { Router } from "express"
-import { getKpiSummary, getDepartmentKpis } from "../services/analyticsService"
+import { db } from "../db"
 
 const router = Router()
 
 router.get("/kpis", async (req, res) => {
-  const period = (req.query.period as string) ?? new Date().toISOString().slice(0, 7)
-  try {
-    const payload = await getKpiSummary(period)
-    res.json(payload)
-  } catch (error: any) {
-    res.status(500).json({ success: false, error: error?.message ?? "kpi_error" })
-  }
+  const period = (req.query.period as string) ?? null
+  const headcountRow = await db("employees").count<{ cnt: number }>("id as cnt").first()
+  const sickDays = await db("leave_records").sum<{ days: number }>("working_days as days").first()
+  res.json({
+    period,
+    headcount: Number(headcountRow?.cnt ?? 0),
+    sick_days_total: Number(sickDays?.days ?? 0),
+  })
 })
 
 router.get("/department/:deptId", async (req, res) => {
   const { deptId } = req.params
-  const period = (req.query.period as string) ?? new Date().toISOString().slice(0, 7)
-  try {
-    const payload = await getDepartmentKpis(deptId, period)
-    res.json(payload)
-  } catch (error: any) {
-    res.status(500).json({ success: false, error: error?.message ?? "department_kpi_error" })
-  }
+  const period = (req.query.period as string) ?? null
+  const headcountRow = await db("employees").where({ department_code: deptId }).count<{ cnt: number }>("id as cnt").first()
+  res.json({
+    department_id: deptId,
+    period,
+    headcount: Number(headcountRow?.cnt ?? 0),
+  })
 })
 
 export default router

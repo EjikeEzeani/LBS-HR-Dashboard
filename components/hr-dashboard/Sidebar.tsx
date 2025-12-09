@@ -1,16 +1,28 @@
 "use client"
 
-import { BarChart3, Users, BookOpen, Stethoscope, TrendingDown, BriefcaseIcon, Menu, Sparkles, CalendarCheck } from "lucide-react"
+import {
+  BarChart3,
+  Users,
+  BookOpen,
+  Stethoscope,
+  TrendingDown,
+  BriefcaseIcon,
+  Menu,
+  Sparkles,
+  CalendarClock,
+  Upload,
+} from "lucide-react"
 import { useState } from "react"
 
 const navItems = [
   { path: "/", label: "Overview", icon: BarChart3 },
   { path: "/demographics", label: "Demographics", icon: Users },
   { path: "/learning-development", label: "Learning & Development", icon: BookOpen },
+  { path: "/leave-analysis", label: "Leave Analysis", icon: CalendarClock },
   { path: "/sickbay", label: "Sickbay Report", icon: Stethoscope },
-  { path: "/leave", label: "Leave Analytics", icon: CalendarCheck },
   { path: "/attrition", label: "Attrition & Exit", icon: TrendingDown },
   { path: "/vacancies", label: "Vacancies", icon: BriefcaseIcon },
+  { path: "/uploads", label: "Data Uploads", icon: Upload },
 ]
 
 interface SidebarProps {

@@ -8,10 +8,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc -p tsconfig.json",
     "migrate": "knex --knexfile src/db/knexfile.ts migrate:latest",
-    "test": "vitest",
-    "fixtures:generate": "ts-node src/scripts/generateFixtures.ts",
-    "seed:fixtures": "ts-node src/scripts/seed.ts",
-    "ci": "npm run build && npm run test"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -39,7 +36,6 @@
     "sqlite3": "^5.1.7",
     "uuid": "^11.0.3",
     "ws": "^8.18.3",
-    "xlsx": "^0.18.5",
     "zod": "^4.1.13"
   },
   "devDependencies": {
